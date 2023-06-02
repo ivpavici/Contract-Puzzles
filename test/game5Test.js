@@ -12,8 +12,24 @@ describe('Game5', function () {
     const { game } = await loadFixture(deployContractAndSetVariables);
 
     // good luck
+    let randomWallet = ethers.Wallet.createRandom();
+    const threshold = 0x00FfFFfFFFfFFFFFfFfFfffFFFfffFfFffFfFFFf;
 
-    await game.win();
+    while(randomWallet.address >= threshold) {
+      randomWallet = ethers.Wallet.createRandom();
+    }
+
+    const winningSigner = await randomWallet.connect(ethers.provider);
+
+    // send funds from defaultSigner to the winningSigner
+    const defaultSigner = await ethers.provider.getSigner(0);
+    const tx = {
+      to: winningSigner.address,
+      value: ethers.utils.parseEther("1.0")
+    }
+    await defaultSigner.sendTransaction(tx);
+
+    await game.connect(winningSigner).win();
 
     // leave this assertion as-is
     assert(await game.isWon(), 'You did not win the game');
